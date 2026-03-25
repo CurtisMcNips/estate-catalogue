@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf9f6">
+<title>Estate Catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root {
+  --bg:#faf9f6; --bg2:#f2f0eb; --bg3:#e8e5de;
+  --surface:#fff; --ink:#1a1a18; --ink2:#5a5850; --ink3:#9a9890;
+  --accent:#2d5a3d; --accent-lt:#e8f2ec;
+  --sell:#1e4570; --sell-lt:#e6eef7;
+  --donate:#7a4a10; --donate-lt:#fdf0e0;
+  --bin:#5a5850; --bin-lt:#f0eeea;
+  --danger:#8b2020;
+  --warn:#7a5a00; --warn-lt:#fdf8e0;
+  --border:rgba(26,26,24,0.1); --border2:rgba(26,26,24,0.2);
+  --shadow:0 1px 3px rgba(26,26,24,0.07),0 4px 16px rgba(26,26,24,0.04);
+  --nav-h:68px;
+  --fd:'Lora',Georgia,serif; --fb:'DM Sans',system-ui,sans-serif;
+  --r:14px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);min-height:100vh;overscroll-behavior:none}
+.app{max-width:480px;margin:0 auto;min-height:100vh}
+
+/* ── PAGES ── */
+.page{display:none;padding:0 0 calc(var(--nav-h)+20px);min-height:100vh;animation:fi .18s ease}
+.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg);padding:50px 20px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.topbar h1{font-family:var(--fd);font-size:25px;font-weight:600;letter-spacing:-.3px}
+.topbar p{font-size:13px;color:var(--ink3);margin-top:2px;font-weight:300}
+.trow{display:flex;align-items:flex-end;justify-content:space-between}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--ink3);font-family:var(--fb);font-size:10px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;padding:8px 2px}
+.nb.active{color:var(--accent)}
+.nb svg{width:22px;height:22px;stroke-width:1.5}
+.nb.active svg{stroke-width:2}
+
+/* ── STATS ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.stile{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;box-shadow:var(--shadow)}
+.stile .n{font-family:var(--fd);font-size:30px;font-weight:600;line-height:1;margin-bottom:3px}
+.stile .l{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.stile.keep .n{color:var(--accent)} .stile.sell .n{color:var(--sell)} .stile.donate .n{color:var(--donate)}
+
+/* ── VALUE BANNER ── */
+.vban{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px 20px;margin:0 16px;display:flex;align-items:center;justify-content:space-between}
+.vban .vl{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.vban .vn{font-family:var(--fd);font-size:26px;font-weight:600}
+.vban .vs{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
+
+/* ── SYNC BAR ── */
+.syncbar{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:12px;color:var(--ink3)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--ink3);flex-shrink:0;transition:background .3s}
+.sdot.ok{background:var(--accent)} .sdot.busy{background:var(--warn);animation:pulse 1s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── SECTION HEADER ── */
+.shead{padding:18px 16px 10px;display:flex;align-items:center;justify-content:space-between}
+.shead h2{font-family:var(--fd);font-size:18px;font-weight:600}
+.shead span{font-size:13px;color:var(--ink3)}
+
+/* ── ITEM CARDS ── */
+.ilist{padding:0 16px 8px}
+.icard{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .1s}
+.icard:active{transform:scale(.99)}
+.itop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.iname{font-family:var(--fd);font-size:16px;font-weight:500;line-height:1.3}
+.isub{font-size:12px;color:var(--ink3);margin-top:3px;font-weight:300}
+.ifooter{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.ival{font-size:15px;font-weight:500;font-family:var(--fd)}
+.ival.empty{color:var(--ink3);font-size:13px;font-family:var(--fb)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;letter-spacing:.03em;text-transform:uppercase;flex-shrink:0}
+.bk{background:var(--accent-lt);color:var(--accent)} .bs{background:var(--sell-lt);color:var(--sell)}
+.bd{background:var(--donate-lt);color:var(--donate)} .bb{background:var(--bin-lt);color:var(--bin)}
+.bu{background:var(--bg3);color:var(--ink2)}
+
+/* ── SEARCH / CHIPS ── */
+.swrap{padding:12px 16px 0;position:relative}
+.sinput{width:100%;padding:11px 16px 11px 40px;border-radius:99px;border:1px solid var(--border2);background:var(--surface);font-family:var(--fb);font-size:15px;color:var(--ink);box-shadow:var(--shadow)}
+.sinput:focus{outline:none;border-color:var(--accent)}
+.sicon{position:absolute;left:28px;top:50%;transform:translateY(-50%);color:var(--ink3);width:16px;height:16px;pointer-events:none}
+.chips{display:flex;gap:7px;padding:10px 16px 0;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:12px;font-weight:500;background:var(--surface);color:var(--ink2);cursor:pointer;font-family:var(--fb);white-space:nowrap;transition:all .15s}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ── FORM ── */
+.fsec{padding:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:12px 14px;border-radius:var(--rs);border:1px solid var(--border2);background:var(--bg);font-family:var(--fb);font-size:15px;color:var(--ink);-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.field textarea{resize:none;height:88px;line-height:1.5}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── BUTTONS ── */
+.bp{width:100%;padding:15px;border-radius:var(--rs);border:none;background:var(--ink);color:#fff;font-family:var(--fb);font-size:15px;font-weight:500;cursor:pointer;transition:opacity .15s}
+.bp:active{opacity:.8}
+.bs2{width:100%;padding:13px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;color:var(--ink);font-family:var(--fb);font-size:15px;cursor:pointer}
+.bs2:active{background:var(--bg2)}
+.ba{width:100%;padding:15px;border-radius:var(--rs);border:none;background:var(--accent);color:#fff;font-family:var(--fb);font-size:15px;font-weight:500;cursor:pointer}
+.ba:active{opacity:.85}
+.bdn{padding:10px 16px;border-radius:var(--rs);border:1px solid rgba(139,32,32,.25);background:transparent;color:var(--danger);font-family:var(--fb);font-size:14px;cursor:pointer;width:100%}
+.brow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── PHOTO ── */
+.upzone{border:1.5px dashed var(--border2);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;background:var(--bg2)}
+.upzone:active{background:var(--bg3)}
+.upzone p{font-size:15px;color:var(--ink2);margin-top:10px}
+.upzone small{font-size:12px;color:var(--ink3);margin-top:4px;display:block}
+.previmg{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r);margin-bottom:14px}
+
+/* ── AI RESULT ── */
+.aigrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.acell{background:var(--surface);padding:12px 14px}
+.acell .al{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);font-weight:500;margin-bottom:4px}
+.acell .av{font-size:14px;color:var(--ink);line-height:1.4}
+.acell.full{grid-column:1/-1}
+.acell.val .av{font-family:var(--fd);font-size:22px;font-weight:600;color:var(--accent)}
+.ailog{background:var(--bg2);border-radius:var(--rs);padding:12px 14px;margin-top:12px;font-size:14px;color:var(--ink2);line-height:1.6;font-style:italic;font-family:var(--fd)}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:28px 20px}
+.spinner{width:30px;height:30px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:14px;color:var(--ink2)}
+
+/* ── MODAL ── */
+.moverlay{position:fixed;inset:0;background:rgba(26,26,24,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.moverlay.open{opacity:1;pointer-events:all}
+.msheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:0 0 40px;max-height:82vh;overflow-y:auto;transform:translateY(40px);transition:transform .25s ease}
+.moverlay.open .msheet{transform:translateY(0)}
+.mhandle{width:36px;height:4px;background:var(--border2);border-radius:99px;margin:12px auto}
+.mhead{padding:4px 20px 16px;border-bottom:1px solid var(--border)}
+.mhead h2{font-family:var(--fd);font-size:20px;font-weight:600}
+.mhead p{font-size:13px;color:var(--ink3);margin-top:3px}
+.mbody{padding:16px 20px}
+.drow{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);gap:16px}
+.drow:last-child{border-bottom:none}
+.dl{font-size:13px;color:var(--ink3);flex-shrink:0}
+.dv{font-size:13px;color:var(--ink);text-align:right;font-weight:500}
+.ddesc{font-size:14px;color:var(--ink2);line-height:1.7;padding:12px 0 0;font-family:var(--fd);font-style:italic}
+
+/* ── EXPORT ── */
+.exparea{font-family:'Courier New',monospace;font-size:12px;line-height:1.7;width:100%;height:300px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);color:var(--ink);resize:none}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:48px 20px}
+.empty svg{color:var(--ink3);margin-bottom:12px}
+.empty p{font-size:15px;color:var(--ink3);font-family:var(--fd);font-style:italic}
+.empty small{font-size:13px;color:var(--ink3);margin-top:6px;display:block}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.cb{padding:16px}
+.toast{position:fixed;bottom:calc(var(--nav-h)+14px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;z-index:300;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.warn-box{background:var(--warn-lt);color:var(--warn);border:1px solid rgba(122,90,0,.2);border-radius:var(--rs);padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:14px}
+.gap{height:10px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════════════════════════
+  !! EDIT THESE TWO LINES ONLY !!
+  API key from console.anthropic.com
+  Shared code: any word your family agrees on
+  (everyone must use the same word to share one catalogue)
+══════════════════════════════ -->
+<script>
+  const API_KEY   = 'YOUR_API_KEY_HERE';
+  const SHARE_CODE = 'family2025';
+</script>
+<!-- ════════════════════════════ -->
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="topbar">
+    <div class="trow">
+      <div><h1>Estate Catalogue</h1><p id="home-date"></p></div>
+    </div>
+  </div>
+  <div class="syncbar"><div class="sdot" id="sdot"></div><span id="slabel">Connecting…</span></div>
+  <div class="sgrid">
+    <div class="stile total"><div class="n" id="s-total">0</div><div class="l">Items logged</div></div>
+    <div class="stile keep"><div class="n" id="s-keep">0</div><div class="l">Keep</div></div>
+    <div class="stile sell"><div class="n" id="s-sell">0</div><div class="l">To sell</div></div>
+    <div class="stile donate"><div class="n" id="s-donate">0</div><div class="l">Donate</div></div>
+  </div>
+  <div class="vban">
+    <div>
+      <div class="vl">Estimated sell value</div>
+      <div class="vn" id="s-value">£—</div>
+      <div class="vs">items marked "sell" with a value</div>
+    </div>
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M14.8 9A2 2 0 0 0 13 8h-2a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9"/><path d="M12 6v2m0 8v2"/></svg>
+  </div>
+  <div class="shead"><h2>Recent items</h2><span id="s-rlbl"></span></div>
+  <div class="ilist" id="recent-list"></div>
+  <div style="padding:0 16px 8px"><button class="bs2" onclick="goTo('catalogue')">View full catalogue →</button></div>
+</div>
+
+<!-- CATALOGUE -->
+<div id="page-catalogue" class="page">
+  <div class="topbar"><h1>All Items</h1></div>
+  <div class="swrap">
+    <svg class="sicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input class="sinput" type="search" placeholder="Search items…" oninput="renderCat()" id="cat-search">
+  </div>
+  <div class="chips">
+    <button class="chip active" onclick="setFilter('all',this)">All</button>
+    <button class="chip" onclick="setFilter('keep',this)">Keep</button>
+    <button class="chip" onclick="setFilter('sell',this)">Sell</button>
+    <button class="chip" onclick="setFilter('donate',this)">Donate</button>
+    <button class="chip" onclick="setFilter('bin',this)">Bin</button>
+    <button class="chip" onclick="setFilter('unknown',this)">Undecided</button>
+  </div>
+  <div class="shead"><h2 id="cat-h">All items</h2><span id="cat-c"></span></div>
+  <div class="ilist" id="cat-list"></div>
+</div>
+
+<!-- ADD ITEM -->
+<div id="page-add" class="page">
+  <div class="topbar"><h1>Add Item</h1><p>Manual entry — or use Photo ID then tap "Add to catalogue"</p></div>
+  <div class="fsec">
+    <div class="field"><label>Item name *</label><input type="text" id="f-name" placeholder="e.g. Blue ceramic vase"></div>
+    <div class="frow">
+      <div class="field"><label>Category</label>
+        <select id="f-cat">
+          <option value="">— select —</option>
+          <option>Furniture</option><option>Ceramics &amp; china</option><option>Glassware</option>
+          <option>Jewellery</option><option>Artwork</option><option>Books</option>
+          <option>Clothing &amp; textiles</option><option>Kitchen items</option>
+          <option>Tools &amp; equipment</option><option>Electronics</option>
+          <option>Documents &amp; photos</option><option>Collectables</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Room / location</label><input type="text" id="f-room" placeholder="e.g. Living room"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>Condition</label>
+        <select id="f-cond">
+          <option value="">— select —</option>
+          <option>Excellent</option><option>Good</option><option>Fair</option><option>Poor</option><option>Damaged</option>
+        </select>
+      </div>
+      <div class="field"><label>Value (£)</label><input type="text" id="f-val" placeholder="e.g. 20–40"></div>
+    </div>
+    <div class="field"><label>Decision</label>
+      <select id="f-dec">
+        <option value="unknown">Undecided</option>
+        <option value="keep">Family keepsake</option>
+        <option value="sell">Sell</option>
+        <option value="donate">Donate</option>
+        <option value="bin">Recycle / bin</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes / description</label>
+      <textarea id="f-desc" placeholder="Maker, markings, provenance, sentimental value…"></textarea>
+    </div>
+    <button class="bp" onclick="addItem()">Add to catalogue</button>
+    <div class="gap"></div>
+    <button class="bs2" onclick="clearForm()">Clear form</button>
+  </div>
+</div>
+
+<!-- PHOTO ID -->
+<div id="page-photo" class="page">
+  <div class="topbar"><h1>Photo ID &amp; Value</h1><p>AI identifies items and estimates UK resale value</p></div>
+  <div class="fsec">
+    <div id="upload-area">
+      <div class="upzone" onclick="document.getElementById('photo-input').click()">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="color:var(--ink3)"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <p>Tap to take or upload a photo</p>
+        <small>Point at any item — AI will identify it and estimate its value</small>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+    </div>
+    <div id="photo-result" style="display:none">
+      <img id="previmg" class="previmg">
+      <div id="ai-load" class="loading">
+        <div class="spinner"></div>
+        <p id="load-msg">Identifying item…</p>
+      </div>
+      <div id="ai-out" style="display:none">
+        <div class="aigrid" id="ai-grid"></div>
+        <div class="ailog" id="ai-log"></div>
+        <div style="height:14px"></div>
+        <button class="ba" onclick="sendToForm()">Add to catalogue →</button>
+        <div class="gap"></div>
+        <button class="bs2" onclick="clearPhoto()">Identify another item</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div id="page-export" class="page">
+  <div class="topbar"><h1>Export</h1><p>Share with family or save for records</p></div>
+  <div class="fsec">
+    <div class="brow">
+      <button class="bp" onclick="copyExp()">Copy text</button>
+      <button class="bs2" onclick="dlCSV()">Download CSV</button>
+    </div>
+    <div class="gap"></div>
+    <textarea class="exparea" id="exp-area" readonly></textarea>
+    <div style="height:16px"></div>
+    <div class="card" style="border-color:rgba(139,32,32,.2)">
+      <div class="cb">
+        <p style="font-size:13px;color:var(--ink2);margin-bottom:10px">Danger zone — cannot be undone</p>
+        <button class="bdn" onclick="clearAll()">Delete all items from this device</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="nb active" id="nav-home" onclick="goTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </button>
+  <button class="nb" id="nav-catalogue" onclick="goTo('catalogue')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Items
+  </button>
+  <button class="nb" id="nav-add" onclick="goTo('add')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add
+  </button>
+  <button class="nb" id="nav-photo" onclick="goTo('photo')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Photo ID
+  </button>
+  <button class="nb" id="nav-export" onclick="goTo('export')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export
+  </button>
+</div>
+
+<!-- ITEM DETAIL MODAL -->
+<div class="moverlay" id="modal" onclick="closeModal(event)">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2 id="m-name"></h2><p id="m-sub"></p></div>
+    <div class="mbody" id="m-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SHARED CATALOGUE ─────────────────────────────────────────────
+// Uses jsonblob.com as a zero-config free JSON store.
+// All family members sharing the same SHARE_CODE see one live list.
+const BLOB_BASE = 'https://jsonblob.com/api/jsonBlob';
+const LOCAL_KEY = 'estate_items_v4';
+const BLOB_ID_KEY = 'estate_blob_id';
+
+let items = [];
+let blobId = localStorage.getItem(BLOB_ID_KEY) || '';
+let aiData = {};
+let currentFilter = 'all';
+let syncTimer = null;
+
+// ── BOOT ─────────────────────────────────────────────────────────
+function boot() {
+  loadLocal();
+  renderHome();
+  initSync();
+}
+
+// ── LOCAL STORAGE ────────────────────────────────────────────────
+function loadLocal() {
+  try { items = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); } catch(e) { items = []; }
+}
+function saveLocal() { localStorage.setItem(LOCAL_KEY, JSON.stringify(items)); }
+function saveAndSync() {
+  saveLocal();
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushCloud, 1000);
+}
+
+// ── CLOUD SYNC ───────────────────────────────────────────────────
+async function initSync() {
+  if (blobId) { await pullCloud(); return; }
+  // No blob yet — create one
+  setSS('busy','Setting up shared catalogue…');
+  try {
+    const r = await fetch(BLOB_BASE, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({ shareCode: SHARE_CODE, items })
+    });
+    const id = r.headers.get('Location')?.split('/').pop();
+    if (id) { blobId = id; localStorage.setItem(BLOB_ID_KEY, id); setSS('ok','Shared catalogue ready'); }
+    else setSS('err','Offline — saved locally');
+  } catch { setSS('err','Offline — saved locally'); }
+}
+
+async function pullCloud() {
+  if (!blobId) return;
+  setSS('busy','Syncing…');
+  try {
+    const r = await fetch(BLOB_BASE+'/'+blobId, {headers:{'Accept':'application/json'}});
+    if (!r.ok) { blobId=''; localStorage.removeItem(BLOB_ID_KEY); await initSync(); return; }
+    const data = await r.json();
+    const cloud = data.items || [];
+    // merge: union by id
+    const local = [...items];
+    cloud.forEach(ci => { if (!local.find(li=>li.id===ci.id)) local.push(ci); });
+    items = local;
+    saveLocal();
+    renderHome(); renderCat();
+    setSS('ok','Synced · '+SHARE_CODE);
+  } catch { setSS('err','Offline — saved locally'); }
+}
+
+async function pushCloud() {
+  if (!blobId) return;
+  setSS('busy','Saving…');
+  try {
+    await fetch(BLOB_BASE+'/'+blobId, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({ shareCode: SHARE_CODE, items })
+    });
+    setSS('ok','Synced · '+SHARE_CODE);
+  } catch { setSS('err','Could not save — will retry'); }
+}
+
+function setSS(state, label) {
+  const d = document.getElementById('sdot'), l = document.getElementById('slabel');
+  if (!d) return;
+  d.className = 'sdot' + (state==='ok'?' ok':state==='busy'?' busy':'');
+  l.textContent = label;
+}
+
+// ── NAV ──────────────────────────────────────────────────────────
+const PAGES = ['home','catalogue','add','photo','export'];
+function goTo(p) {
+  PAGES.forEach(n=>{
+    document.getElementById('page-'+n)?.classList.toggle('active',n===p);
+    document.getElementById('nav-'+n)?.classList.toggle('active',n===p);
+  });
+  window.scrollTo(0,0);
+  if (p==='home') { renderHome(); pullCloud(); }
+  if (p==='catalogue') renderCat();
+  if (p==='export') renderExp();
+}
+
+// ── HOME ─────────────────────────────────────────────────────────
+function renderHome() {
+  const c={keep:0,sell:0,donate:0,bin:0,unknown:0};
+  let sv=0, sn=0;
+  items.forEach(it=>{
+    c[it.decision]=(c[it.decision]||0)+1;
+    if (it.decision==='sell'&&it.value){const n=parseFloat(String(it.value).replace(/[^0-9.]/g,''));if(!isNaN(n)){sv+=n;sn++;}}
+  });
+  set('s-total',items.length); set('s-keep',c.keep||0); set('s-sell',c.sell||0); set('s-donate',c.donate||0);
+  set('s-value',sn?'£'+sv.toFixed(0):'£—');
+  set('home-date',new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));
+  set('s-rlbl',items.length?items.length+' total':'');
+  const rl=document.getElementById('recent-list');
+  const recent=items.slice(-5).reverse();
+  rl.innerHTML=recent.length?recent.map(it=>iCard(it,true)).join(''):'<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No items yet</p><small>Add your first item or use Photo ID</small></div>';
+}
+
+// ── CATALOGUE ────────────────────────────────────────────────────
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderCat();}
+function renderCat(){
+  const q=(document.getElementById('cat-search')?.value||'').toLowerCase();
+  const f=items.filter(it=>(currentFilter==='all'||it.decision===currentFilter)&&(!q||(it.name+it.category+it.room+it.desc).toLowerCase().includes(q))).slice().reverse();
+  const lbl={all:'All items',keep:'Keep',sell:'Sell',donate:'Donate',bin:'Bin',unknown:'Undecided'};
+  set('cat-h',lbl[currentFilter]||'Items');
+  set('cat-c',f.length+(f.length===1?' item':' items'));
+  document.getElementById('cat-list').innerHTML=f.length?f.map(it=>iCard(it,false)).join(''):'<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>'+(items.length?'No matching items':'Nothing logged yet')+'</p><small>'+(items.length?'Try a different filter':'Tap Add or use Photo ID')+'</small></div>';
+}
+function iCard(it,compact){
+  const sub=[it.category,it.room].filter(Boolean).join(' · ');
+  return `<div class="icard" onclick="openModal('${it.id}')">
+    <div class="itop"><div style="flex:1;min-width:0"><div class="iname">${x(it.name)}</div>${sub?`<div class="isub">${x(sub)}</div>`:''}</div>
+    <span class="badge ${bc(it.decision)}">${bl(it.decision)}</span></div>
+    <div class="ifooter">${it.value?`<span class="ival">£${x(it.value)}</span>`:`<span class="ival empty">${x(it.condition||'—')}</span>`}
+    ${!compact?`<span style="font-size:12px;color:var(--ink3)">${it.added||''}</span>`:''}</div>
+  </div>`;
+}
+
+// ── MODAL ────────────────────────────────────────────────────────
+function openModal(id){
+  const it=items.find(i=>String(i.id)===String(id));if(!it)return;
+  set('m-name',it.name);
+  set('m-sub',[it.category,it.room].filter(Boolean).join(' · ')||'No category');
+  document.getElementById('m-body').innerHTML=
+    [['Condition',it.condition||'—'],['Value (£)',it.value?'£'+it.value:'—'],['Decision',bl(it.decision)],['Added',it.added||'—']]
+    .map(r=>`<div class="drow"><span class="dl">${r[0]}</span><span class="dv">${x(r[1])}</span></div>`).join('')+
+    (it.desc?`<div class="ddesc">"${x(it.desc)}"</div>`:'')+
+    `<div style="height:16px"></div><button class="bdn" onclick="delItem('${it.id}')">Remove from catalogue</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');}
+function delItem(id){
+  if(!confirm('Remove this item?'))return;
+  items=items.filter(i=>String(i.id)!==String(id));
+  saveAndSync();
+  document.getElementById('modal').classList.remove('open');
+  renderCat();renderHome();toast('Item removed');
+}
+
+// ── ADD ──────────────────────────────────────────────────────────
+function addItem(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Please enter an item name.');return;}
+  items.push({
+    id:Date.now(),name,
+    category:document.getElementById('f-cat').value,
+    room:document.getElementById('f-room').value.trim(),
+    condition:document.getElementById('f-cond').value,
+    value:document.getElementById('f-val').value.trim(),
+    decision:document.getElementById('f-dec').value,
+    desc:document.getElementById('f-desc').value.trim(),
+    added:new Date().toLocaleDateString('en-GB')
+  });
+  saveAndSync();clearForm();toast('Item added ✓');goTo('catalogue');
+}
+function clearForm(){
+  ['f-name','f-cat','f-room','f-cond','f-val','f-dec','f-desc'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.tagName==='SELECT'?el.selectedIndex=0:el.value='';
+  });
+}
+
+// ── PHOTO ID ─────────────────────────────────────────────────────
+const MSGS=['Identifying item…','Checking age &amp; maker…','Looking up UK sold prices…','Almost done…'];
+let msgIdx=0,msgTimer=null;
+
+async function handlePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const b64=ev.target.result.split(',')[1];
+    document.getElementById('previmg').src=ev.target.result;
+    document.getElementById('upload-area').style.display='none';
+    document.getElementById('photo-result').style.display='block';
+    document.getElementById('ai-load').style.display='block';
+    document.getElementById('ai-out').style.display='none';
+    msgIdx=0;document.getElementById('load-msg').innerHTML=MSGS[0];
+    msgTimer=setInterval(()=>{msgIdx=Math.min(msgIdx+1,MSGS.length-1);document.getElementById('load-msg').innerHTML=MSGS[msgIdx];},2200);
+    await runAI(b64,file.type);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runAI(b64,mime){
+  const prompt=`You are an expert antiques and second-hand goods appraiser helping a UK family catalogue a late relative's estate.
+
+Analyse this photo and respond using EXACTLY these labels, one per line:
+
+ITEM: [precise identification of what this is]
+MAKERS: [brand, maker, model if visible — else "Unknown"]
+MATERIALS: [what it is made from]
+AGE: [estimated decade or era, e.g. "1970s–1980s"]
+VALUE: [realistic UK second-hand sold price range in GBP, e.g. "£15–£40"]
+FACTORS: [1–2 sentences on what pushes this value up or down]
+RECOMMEND: [exactly one word: Keep / Sell / Donate / Bin]
+LOG: [one clear sentence for a family catalogue record]
+
+Base VALUE on realistic UK sold prices from eBay, Vinted, and charity shops. If you cannot identify something clearly, say so honestly.`;
+
+  try {
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:800,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+        {type:'text',text:prompt}
+      ]}]})
+    });
+    clearInterval(msgTimer);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'API error '+r.status);}
+    const d=await r.json();
+    parseAI(d.content?.[0]?.text||'');
+  } catch(err){
+    clearInterval(msgTimer);
+    document.getElementById('ai-load').style.display='none';
+    document.getElementById('ai-out').innerHTML=`<div class="warn-box"><strong>Could not identify item.</strong><br>${x(err.message||'Check your connection and try again.')}</div><button class="bs2" onclick="clearPhoto()">Try again</button>`;
+    document.getElementById('ai-out').style.display='block';
+  }
+}
+
+function parseAI(text){
+  const keys=['ITEM','MAKERS','MATERIALS','AGE','VALUE','FACTORS','RECOMMEND','LOG'];
+  const p={};
+  keys.forEach((k,i)=>{
+    const nk=keys[i+1];
+    const re=nk?new RegExp(k+':\\s*([\\s\\S]*?)(?='+nk+':)','i'):new RegExp(k+':\\s*([\\s\\S]*)$','i');
+    const m=text.match(re);p[k]=m?m[1].trim():'';
+  });
+  aiData=p;
+  const dec=['keep','sell','donate','bin'].find(k=>(p['RECOMMEND']||'').toLowerCase().includes(k))||'unknown';
+  document.getElementById('ai-grid').innerHTML=`
+    <div class="acell full"><div class="al">Item identified</div><div class="av" style="font-family:var(--fd);font-size:16px">${x(p['ITEM'])}</div></div>
+    <div class="acell val"><div class="al">Est. value (GBP)</div><div class="av">${x(p['VALUE'])}</div></div>
+    <div class="acell"><div class="al">Recommendation</div><div class="av"><span class="badge ${bc(dec)}">${bl(dec)}</span></div></div>
+    <div class="acell"><div class="al">Makers / brand</div><div class="av">${x(p['MAKERS'])}</div></div>
+    <div class="acell"><div class="al">Materials</div><div class="av">${x(p['MATERIALS'])}</div></div>
+    <div class="acell full"><div class="al">Approximate age</div><div class="av">${x(p['AGE'])}</div></div>
+    <div class="acell full"><div class="al">Value factors</div><div class="av" style="color:var(--ink2)">${x(p['FACTORS'])}</div></div>`;
+  document.getElementById('ai-log').textContent='"'+p['LOG']+'"';
+  document.getElementById('ai-load').style.display='none';
+  document.getElementById('ai-out').style.display='block';
+}
+
+function sendToForm(){
+  const p=aiData;if(!p['ITEM'])return;
+  document.getElementById('f-name').value=p['ITEM']||'';
+  document.getElementById('f-val').value=(p['VALUE']||'').replace(/[£GBP]/gi,'').trim();
+  document.getElementById('f-desc').value=p['LOG']||'';
+  document.getElementById('f-dec').value=['keep','sell','donate','bin'].find(k=>(p['RECOMMEND']||'').toLowerCase().includes(k))||'unknown';
+  goTo('add');toast('Form pre-filled — review and save');
+}
+function clearPhoto(){
+  document.getElementById('photo-input').value='';
+  document.getElementById('upload-area').style.display='block';
+  document.getElementById('photo-result').style.display='none';
+  aiData={};
+}
+
+// ── EXPORT ───────────────────────────────────────────────────────
+function renderExp(){
+  if(!items.length){document.getElementById('exp-area').value='No items logged yet.';return;}
+  const lines=['ESTATE CATALOGUE','Exported: '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),'─'.repeat(44),''];
+  items.forEach((it,i)=>{
+    lines.push('#'+(i+1)+'  '+it.name);
+    if(it.category)lines.push('    Category:  '+it.category);
+    if(it.room)lines.push('    Location:  '+it.room);
+    if(it.condition)lines.push('    Condition: '+it.condition);
+    if(it.value)lines.push('    Value:     £'+it.value);
+    lines.push('    Decision:  '+bl(it.decision));
+    if(it.desc)lines.push('    Notes:     '+it.desc);
+    lines.push('');
+  });
+  document.getElementById('exp-area').value=lines.join('\n');
+}
+function copyExp(){const e=document.getElementById('exp-area');e.select();document.execCommand('copy');toast('Copied to clipboard');}
+function dlCSV(){
+  const H=['Name','Category','Room','Condition','Value','Decision','Notes','Added'];
+  const rows=items.map(it=>[it.name,it.category,it.room,it.condition,it.value||'',bl(it.decision),it.desc||'',it.added||''].map(v=>`"${(v||'').replace(/"/g,'""')}"`));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([H.join(',')+'\n'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'}));
+  a.download='estate-catalogue-'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV downloaded');
+}
+function clearAll(){
+  if(!confirm('Delete ALL items from this device?'))return;
+  items=[];saveLocal();renderExp();renderHome();toast('All items deleted');
+}
+
+// ── UTILS ────────────────────────────────────────────────────────
+function bc(d){return{keep:'bk',sell:'bs',donate:'bd',bin:'bb',unknown:'bu'}[d]||'bu';}
+function bl(d){return{keep:'Keep',sell:'Sell',donate:'Donate',bin:'Bin',unknown:'Undecided'}[d]||'Undecided';}
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+
+boot();
+</script>
+</body>
+</html>
