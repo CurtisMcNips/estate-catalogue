@@ -179,13 +179,13 @@ body{font-family:var(--fb);background:var(--bg);color:var(--ink);min-height:100v
 
 <!-- ══════════════════════════════
   !! EDIT THESE TWO LINES ONLY !!
-   key from console.anthropic.com
+  API key from console.anthropic.com
   Shared code: any word your family agrees on
   (everyone must use the same word to share one catalogue)
 ══════════════════════════════ -->
 <script>
-  const _KEY   = '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';
-  const SHARE_CODE = 'family2026';
+  const API_KEY   = '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';
+  const SHARE_CODE = 'family2025';
 </script>
 <!-- ════════════════════════════ -->
 
@@ -584,7 +584,7 @@ Base VALUE on realistic UK sold prices from eBay, Vinted, and charity shops. If 
     const r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:800,messages:[{role:'user',content:[
+      body:JSON.stringify({model:'claude-sonnet-4-5-20250929',max_tokens:800,messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:mime,data:b64}},
         {type:'text',text:prompt}
       ]}]})
